@@ -56,6 +56,13 @@ service cloud.firestore {
       );
       
       // --- Subcollections ---
+      match /requests/{requestId} {
+        allow get: if isSignedIn() && (request.auth.uid == resource.data.toUid || request.auth.uid == resource.data.fromUid);
+        allow list: if isSignedIn() && (request.auth.uid == resource.data.toUid || request.auth.uid == resource.data.fromUid);
+        allow create: if isSignedIn() && request.auth.uid == incoming().fromUid;
+        allow update: if isSignedIn() && request.auth.uid == resource.data.toUid && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+        allow delete: if isSignedIn() && (request.auth.uid == resource.data.toUid || request.auth.uid == resource.data.fromUid);
+      }
       match /health/{id} {
         allow read: if isSignedIn() && (request.auth.uid == userId || request.auth.uid in get(/databases/$(database)/documents/users/$(userId)).data.linkedUids);
         allow write: if isSignedIn() && request.auth.uid == userId; // Only elderly writes their own health

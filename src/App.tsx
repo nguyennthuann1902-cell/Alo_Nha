@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db, googleProvider, handleFirestoreError, OperationType } from './lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, signInWithPopup } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot, arrayUnion, Timestamp, getDocFromServer, collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, arrayUnion, Timestamp, getDocFromServer, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Pill, Activity, Phone, PhoneCall, AlertCircle, LogOut, User, Plus, Check, ChevronRight, UserPlus, Users, Home, Calendar } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
@@ -52,8 +52,17 @@ interface AppActivity {
   fromUid: string;
   fromName: string;
   toUids: string[];
-  type: 'sos' | 'medicine' | 'heart' | 'call';
+  type: 'sos' | 'medicine' | 'heart' | 'call' | 'request';
   message: string;
+  timestamp: Timestamp;
+}
+
+interface ConnectionRequest {
+  id: string;
+  fromUid: string;
+  fromName: string;
+  toUid: string;
+  status: 'pending' | 'accepted' | 'rejected';
   timestamp: Timestamp;
 }
 
@@ -427,31 +436,42 @@ const FamilyDashboard = ({ profile }: { profile: UserProfile }) => {
   }, [profile.linkedUids]);
 
   const handleLink = async () => {
-    if (inviteCode.length < 6) return;
+    if (!inviteCode || isLinking) return;
     setIsLinking(true);
     try {
-      const codeRef = doc(db, 'linkCodes', inviteCode.toUpperCase());
-      const codeSnap = await getDoc(codeRef);
-      if (!codeSnap.exists()) {
-        toast.error('Mã không hợp lệ!');
+      // Find the code in linkCodes collection
+      const q = query(collection(db, 'linkCodes'), where('code', '==', inviteCode.toUpperCase()));
+      const codeSnap = await getDocs(q);
+      
+      if (codeSnap.empty) {
+        toast.error('Mã không hợp lệ hoặc đã hết hạn');
         return;
       }
-      const elderUid = codeSnap.data().elderUid;
+      
+      const elderUid = codeSnap.docs[0].data().elderUid;
       if (elderUid === profile.userId) {
         toast.error('Không thể tự kết nối!');
         return;
       }
-      
-      await setDoc(doc(db, 'users', profile.userId), {
-        linkedUids: arrayUnion(elderUid)
-      }, { merge: true });
-      
-      await setDoc(doc(db, 'users', elderUid), {
-        linkedUids: arrayUnion(profile.userId),
-        _lastLinkCode: inviteCode.toUpperCase()
-      }, { merge: true });
 
-      toast.success('Kết nối thành công!');
+      // Check if already linked
+      if (profile.linkedUids.includes(elderUid)) {
+        toast.error('Đã kết nối với người này rồi');
+        return;
+      }
+
+      // Create a connection request instead of direct link
+      const requestId = `${profile.userId}_${elderUid}`;
+      await setDoc(doc(db, 'requests', requestId), {
+        fromUid: profile.userId,
+        fromName: profile.displayName,
+        toUid: elderUid,
+        status: 'pending',
+        timestamp: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+
+      toast.success('Đã gửi yêu cầu kết nối. Chờ ông bà đồng ý!');
       setInviteCode('');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `users/${profile.userId}`);
@@ -614,6 +634,56 @@ const StatCard = ({ icon, label, value, unit, status }: any) => (
 const ElderlyDashboard = ({ profile }: { profile: UserProfile }) => {
   const [inviteCode, setInviteCode] = useState(profile.inviteCode || '');
   const [showCode, setShowCode] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState<ConnectionRequest[]>([]);
+
+  useEffect(() => {
+    // Listen for connection requests targeting this elderly person
+    const q = query(
+      collection(db, 'requests'),
+      where('toUid', '==', profile.userId),
+      where('status', '==', 'pending')
+    );
+    return onSnapshot(q, (snap) => {
+      setPendingRequests(snap.docs.map(d => ({ id: d.id, ...d.data() } as ConnectionRequest)));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'requests');
+    });
+  }, [profile.userId]);
+
+  const handleAcceptRequest = async (request: ConnectionRequest) => {
+    try {
+      // 1. Mark request as accepted
+      await setDoc(doc(db, 'requests', request.id), { 
+        status: 'accepted',
+        updatedAt: Timestamp.now()
+      }, { merge: true });
+
+      // 2. Link both users
+      await setDoc(doc(db, 'users', profile.userId), {
+        linkedUids: arrayUnion(request.fromUid)
+      }, { merge: true });
+      
+      await setDoc(doc(db, 'users', request.fromUid), {
+        linkedUids: arrayUnion(profile.userId)
+      }, { merge: true });
+
+      toast.success(`Đã kết nối với ${request.fromName}!`, { style: { fontSize: '20px', borderRadius: '20px' } });
+    } catch (e) {
+      toast.error('Lỗi khi chấp nhận yêu cầu');
+    }
+  };
+
+  const handleRejectRequest = async (request: ConnectionRequest) => {
+    try {
+      await setDoc(doc(db, 'requests', request.id), { 
+        status: 'rejected',
+        updatedAt: Timestamp.now()
+      }, { merge: true });
+      toast.success('Đã từ chối lời mời', { style: { fontSize: '20px', borderRadius: '20px' } });
+    } catch (e) {
+      toast.error('Lỗi khi từ chối');
+    }
+  };
 
   const generateCode = async () => {
     const chars = '0123456789';
@@ -665,7 +735,7 @@ const ElderlyDashboard = ({ profile }: { profile: UserProfile }) => {
   return (
     <main className="pt-20 min-h-screen bg-[#F1F2F6] p-4 md:p-8 font-sans text-[#2D3436]">
       <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
-        <div className="bg-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] shadow-sm border-2 border-[#DFE6E9] flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="bg-white p-8 rounded-[40px] shadow-sm border-2 border-[#DFE6E9] flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-left">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-balance">Chào {profile.displayName}!</h2>
             <p className="text-lg md:text-xl text-[#636E72] font-medium mt-2">Hôm nay ông bà thấy thế nào?</p>
@@ -679,6 +749,40 @@ const ElderlyDashboard = ({ profile }: { profile: UserProfile }) => {
             <span className="text-lg md:text-xl font-bold">S.O.S</span>
           </motion.button>
         </div>
+
+        {/* Connection Requests for Elderly */}
+        {pendingRequests.length > 0 && (
+          <div className="space-y-4">
+            {pendingRequests.map(req => (
+              <motion.div 
+                key={req.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-[#FFF9DB] p-8 rounded-[40px] border-4 border-[#FFCA28] shadow-xl flex flex-col items-center text-center gap-6"
+              >
+                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-4xl shadow-sm">✉️</div>
+                <div>
+                  <h3 className="text-3xl font-bold text-[#2D3436]">Lời mời chăm sóc!</h3>
+                  <p className="text-xl text-[#636E72] font-medium mt-2">Con <span className="text-orange-600 font-black">{req.fromName}</span> muốn kết nối để chăm sóc ông bà.</p>
+                </div>
+                <div className="flex gap-4 w-full">
+                  <button 
+                    onClick={() => handleAcceptRequest(req)}
+                    className="flex-1 py-6 bg-green-500 text-white rounded-3xl font-black text-2xl shadow-lg active:scale-95 transition-all"
+                  >
+                    Đồng ý
+                  </button>
+                  <button 
+                    onClick={() => handleRejectRequest(req)}
+                    className="flex-1 py-6 bg-white border-2 border-[#DFE6E9] text-[#636E72] rounded-3xl font-bold text-xl active:scale-95 transition-all"
+                  >
+                    Để sau
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
           <ElderActionButton 
