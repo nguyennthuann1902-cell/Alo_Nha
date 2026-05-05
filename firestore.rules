@@ -76,5 +76,24 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidLinkCode(incoming()) && incoming().elderUid == request.auth.uid;
       allow delete: if isSignedIn() && (existing().elderUid == request.auth.uid || request.auth.uid in get(/databases/$(database)/documents/users/$(existing().elderUid)).data.linkedUids);
     }
+
+    // --- FriendRequests ---
+    match /friendRequests/{requestId} {
+      function isValidFriendRequest(data) {
+        return data.keys().hasAll(['fromId', 'fromName', 'toId', 'status', 'timestamp']) &&
+               data.fromId == request.auth.uid &&
+               data.status == 'pending' &&
+               data.fromName is string && data.fromName.size() <= 100 &&
+               data.toId is string && isValidId(data.toId);
+      }
+
+      allow read: if isSignedIn() && (resource.data.fromId == request.auth.uid || resource.data.toId == request.auth.uid);
+      allow list: if isSignedIn() && (resource.data.fromId == request.auth.uid || resource.data.toId == request.auth.uid);
+      allow create: if isSignedIn() && isValidFriendRequest(incoming());
+      allow update: if isSignedIn() && resource.data.toId == request.auth.uid && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
+                    incoming().status in ['accepted', 'declined'];
+      allow delete: if isSignedIn() && (resource.data.fromId == request.auth.uid || resource.data.toId == request.auth.uid);
+    }
   }
 }

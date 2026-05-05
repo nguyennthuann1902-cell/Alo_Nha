@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, onSnapshot, arrayUnion, Timestamp, getDocFromServer } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+import { auth, db, googleProvider } from './lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, signInWithPopup } from 'firebase/auth';
+import { doc, getDoc, setDoc, onSnapshot, arrayUnion, Timestamp, getDocFromServer, collection, query, where } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Pill, Activity, Phone, PhoneCall, AlertCircle, LogOut, User, Plus, Check, ChevronRight, UserPlus, Users, Home, Calendar } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
 
 // --- Utils ---
 function cn(...inputs: ClassValue[]) {
@@ -42,6 +37,128 @@ interface UserProfile {
   linkedUids: string[];
   inviteCode?: string;
 }
+
+interface FriendRequest {
+  id: string;
+  fromId: string;
+  fromName: string;
+  toId: string;
+  status: 'pending' | 'accepted' | 'declined';
+  timestamp: Timestamp;
+}
+
+// --- Components ---
+
+const FriendManagement = ({ profile }: { profile: UserProfile }) => {
+  const [searchId, setSearchId] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [requests, setRequests] = useState<FriendRequest[]>([]);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'friendRequests'),
+      where('toId', '==', profile.userId),
+      where('status', '==', 'pending')
+    );
+    return onSnapshot(q, (snap) => {
+      setRequests(snap.docs.map(d => ({ id: d.id, ...d.data() } as FriendRequest)));
+    });
+  }, [profile.userId]);
+
+  const sendRequest = async () => {
+    if (!searchId || searchId === profile.userId) return;
+    setSearching(true);
+    try {
+      const userSnap = await getDoc(doc(db, 'users', searchId));
+      if (!userSnap.exists()) {
+        toast.error('Không tìm thấy người dùng với ID này');
+        return;
+      }
+      
+      const reqId = `${profile.userId}_${searchId}`;
+      await setDoc(doc(db, 'friendRequests', reqId), {
+        fromId: profile.userId,
+        fromName: profile.displayName,
+        toId: searchId,
+        status: 'pending',
+        timestamp: Timestamp.now()
+      });
+      toast.success('Đã gửi yêu cầu kết nối!');
+      setSearchId('');
+    } catch (e) {
+      toast.error('Lỗi khi gửi yêu cầu');
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleRequest = async (req: FriendRequest, accept: boolean) => {
+    try {
+      if (accept) {
+        await setDoc(doc(db, 'friendRequests', req.id), { status: 'accepted' }, { merge: true });
+        // Link users
+        await setDoc(doc(db, 'users', profile.userId), {
+          linkedUids: arrayUnion(req.fromId)
+        }, { merge: true });
+        await setDoc(doc(db, 'users', req.fromId), {
+          linkedUids: arrayUnion(profile.userId)
+        }, { merge: true });
+        toast.success('Đã chấp nhận kết nối!');
+      } else {
+        await setDoc(doc(db, 'friendRequests', req.id), { status: 'declined' }, { merge: true });
+        toast.success('Đã từ chối yêu cầu');
+      }
+    } catch (e) {
+      toast.error('Lỗi khi xử lý yêu cầu');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-[10px] uppercase font-bold text-[#8C8881] mb-4 tracking-widest">Tìm kiếm theo Firebase ID</h3>
+        <div className="flex gap-2">
+          <input 
+            value={searchId} onChange={e => setSearchId(e.target.value)}
+            placeholder="FIREBASE USER ID"
+            className="flex-1 p-4 border border-[#D1CEC8] rounded-sm focus:border-[#1A1A1A] focus:outline-none text-xs font-mono"
+          />
+          <button 
+            onClick={sendRequest} disabled={searching}
+            className="px-6 bg-[#1A1A1A] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors disabled:opacity-50"
+          >
+            {searching ? '...' : 'Gửi'}
+          </button>
+        </div>
+        <p className="text-[10px] text-[#8C8881] mt-2 italic">ID của bạn: <span className="font-mono text-[#1A1A1A] select-all cursor-pointer hover:underline" onClick={() => {navigator.clipboard.writeText(profile.userId); toast.success('Đã copy ID');}}>{profile.userId}</span></p>
+      </div>
+
+      {requests.length > 0 && (
+        <div className="pt-4 border-t border-[#D1CEC8]">
+          <h3 className="text-[10px] uppercase font-bold text-[#8C8881] mb-4 tracking-widest">Yêu cầu đến ({requests.length})</h3>
+          <div className="space-y-4">
+            {requests.map(req => (
+              <div key={req.id} className="p-4 border border-[#D1CEC8] bg-white rounded-sm flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold">{req.fromName}</span>
+                  <span className="text-[9px] text-[#8C8881] font-mono">ID: {req.fromId.substring(0, 8)}...</span>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleRequest(req, true)} className="p-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-sm">
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleRequest(req, false)} className="p-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-sm">
+                    <AlertCircle className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // --- Components ---
 
@@ -74,6 +191,21 @@ const Auth = ({ onAuthSuccess }: { onAuthSuccess: () => void }) => {
       onAuthSuccess();
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      await signInWithPopup(auth, googleProvider);
+      toast.success('Đã đăng nhập bằng Google!');
+      onAuthSuccess();
+    } catch (error: any) {
+      if (error.code !== 'auth/popup-closed-by-user') {
+        toast.error(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -141,6 +273,25 @@ const Auth = ({ onAuthSuccess }: { onAuthSuccess: () => void }) => {
             {loading ? 'Processing...' : (isLogin ? 'Enter Console' : 'Initialize Account')}
           </button>
         </form>
+
+        <div className="mt-8 pt-8 border-t border-[#D1CEC8]">
+          <div className="text-center mb-6">
+            <span className="text-[9px] uppercase tracking-widest text-[#8C8881]">Hoặc tiếp tục với</span>
+          </div>
+          <button 
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="w-full py-4 border border-[#D1CEC8] bg-white text-[#1A1A1A] text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-[#F5F2ED] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+          >
+            <svg className="w-4 h-4 ml-[-8px]" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="currentColor" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z" />
+              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            </svg>
+            Google
+          </button>
+        </div>
       </motion.div>
     </div>
   );
@@ -308,6 +459,10 @@ const FamilyDashboard = ({ profile }: { profile: UserProfile }) => {
                   Sync
                 </button>
               </div>
+            </div>
+
+            <div className="pt-8 border-t border-[#D1CEC8]">
+              <FriendManagement profile={profile} />
             </div>
           </div>
         </div>
@@ -477,20 +632,26 @@ const ElderlyDashboard = ({ profile }: { profile: UserProfile }) => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white border-2 border-dashed border-[#D1CEC8] p-16 rounded-sm text-center"
+              className="grid md:grid-cols-2 gap-12"
             >
-              <span className="text-[10px] uppercase tracking-[0.5em] font-bold text-[#8C8881] mb-8 block">Security Access Key</span>
-              {inviteCode ? (
-                <div className="text-9xl font-serif italic tracking-[0.2em] text-[#1A1A1A] mb-12 tabular-nums">{inviteCode}</div>
-              ) : (
-                <button 
-                  onClick={generateCode}
-                  className="px-12 py-5 bg-[#1A1A1A] text-white text-xs uppercase tracking-[0.4em] font-bold mb-8 hover:bg-black"
-                >
-                  Generate New Key
-                </button>
-              )}
-              <p className="text-[#8C8881] font-serif italic text-xl">Đọc 6 ký tự này cho con cháu để bắt đầu đồng bộ hóa dữ liệu.</p>
+              <div className="bg-white border-2 border-dashed border-[#D1CEC8] p-16 rounded-sm text-center">
+                <span className="text-[10px] uppercase tracking-[0.5em] font-bold text-[#8C8881] mb-8 block">Security Access Key</span>
+                {inviteCode ? (
+                  <div className="text-7xl font-serif italic tracking-[0.2em] text-[#1A1A1A] mb-12 tabular-nums">{inviteCode}</div>
+                ) : (
+                  <button 
+                    onClick={generateCode}
+                    className="px-12 py-5 bg-[#1A1A1A] text-white text-xs uppercase tracking-[0.4em] font-bold mb-8 hover:bg-black"
+                  >
+                    Generate New Key
+                  </button>
+                )}
+                <p className="text-[#8C8881] font-serif italic text-sm">Đọc 6 ký tự này cho con cháu để bắt đầu đồng bộ hóa dữ liệu.</p>
+              </div>
+
+              <div className="bg-white border border-[#D1CEC8] p-16 rounded-sm">
+                <FriendManagement profile={profile} />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

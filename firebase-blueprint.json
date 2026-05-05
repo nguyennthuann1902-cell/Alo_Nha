@@ -68,6 +68,19 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["elderUid", "displayName"]
+    },
+    "FriendRequest": {
+      "title": "FriendRequest",
+      "description": "A request to link accounts between two users.",
+      "type": "object",
+      "properties": {
+        "fromId": { "type": "string" },
+        "fromName": { "type": "string" },
+        "toId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "declined"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fromId", "fromName", "toId", "status", "timestamp"]
     }
   },
   "firestore": {
@@ -90,6 +103,10 @@
     "/linkCodes/{code}": {
       "schema": "LinkCode",
       "description": "Global collection for active linking codes."
+    },
+    "/friendRequests/{requestId}": {
+      "schema": "FriendRequest",
+      "description": "Global collection for account linking requests."
     }
   }
 }
