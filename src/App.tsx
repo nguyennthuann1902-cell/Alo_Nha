@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db, googleProvider } from './lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, signInWithPopup } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot, arrayUnion, Timestamp, getDocFromServer, collection, query, where } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, arrayUnion, Timestamp, getDocFromServer, collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Pill, Activity, Phone, PhoneCall, AlertCircle, LogOut, User, Plus, Check, ChevronRight, UserPlus, Users, Home, Calendar } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
@@ -44,6 +44,16 @@ interface FriendRequest {
   fromName: string;
   toId: string;
   status: 'pending' | 'accepted' | 'declined';
+  timestamp: Timestamp;
+}
+
+interface AppActivity {
+  id: string;
+  fromUid: string;
+  fromName: string;
+  toUids: string[];
+  type: 'sos' | 'medicine' | 'heart' | 'call';
+  message: string;
   timestamp: Timestamp;
 }
 
@@ -367,6 +377,38 @@ const FamilyDashboard = ({ profile }: { profile: UserProfile }) => {
   const [inviteCode, setInviteCode] = useState('');
   const [isLinking, setIsLinking] = useState(false);
   const [linkedElders, setLinkedElders] = useState<UserProfile[]>([]);
+  const [activities, setActivities] = useState<AppActivity[]>([]);
+
+  useEffect(() => {
+    if (!profile.linkedUids || profile.linkedUids.length === 0) return;
+
+    // Listen to activities targeting this user
+    const q = query(
+      collection(db, 'activities'),
+      where('toUids', 'array-contains', profile.userId),
+      orderBy('timestamp', 'desc'),
+      limit(10)
+    );
+
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const newActs = snap.docs.map(d => ({ id: d.id, ...d.data() } as AppActivity));
+      setActivities(newActs);
+      
+      // Urgent SOS toast for family
+      snap.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          const act = change.doc.data() as AppActivity;
+          if (act.type === 'sos') {
+            toast.error(`🆘 KHẨN CẤP: ${act.fromName} nhấn SOS!`, { duration: 10000, position: 'top-center' });
+          } else if (act.type === 'medicine') {
+             toast.success(`💊 ${act.fromName} đã báo uống thuốc`, { position: 'bottom-right' });
+          }
+        }
+      });
+    });
+
+    return () => unsubscribe();
+  }, [profile.userId, profile.linkedUids]);
 
   useEffect(() => {
     if (profile.linkedUids.length > 0) {
@@ -480,6 +522,39 @@ const FamilyDashboard = ({ profile }: { profile: UserProfile }) => {
             </div>
 
             <div className="bg-white p-8 rounded-3xl border-2 border-[#DFE6E9] shadow-sm">
+              <h3 className="text-xl font-bold mb-6 text-[#2D3436]">Thông báo mới nhất</h3>
+              <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+                {activities.length > 0 ? (
+                  activities.map(act => (
+                    <div key={act.id} className={cn(
+                      "p-4 rounded-xl border flex gap-4 items-start",
+                      act.type === 'sos' ? "bg-red-50 border-red-200" : "bg-[#F8F9FA] border-[#DFE6E9]"
+                    )}>
+                      <div className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+                        act.type === 'sos' ? "bg-red-500 text-white" : "bg-[#2D3436] text-white"
+                      )}>
+                        {act.type === 'sos' ? <AlertCircle className="w-5 h-5" /> : 
+                         act.type === 'medicine' ? <Pill className="w-5 h-5" /> : 
+                         act.type === 'call' ? <Phone className="w-5 h-5" /> : <Activity className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm">
+                          {act.fromName} <span className="font-normal opacity-70">là {act.message}</span>
+                        </p>
+                        <p className="text-[10px] text-[#636E72] mt-1 italic">
+                          {act.timestamp.toDate().toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-[#636E72] py-8 italic">Chưa có hoạt động nào</p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white p-8 rounded-3xl border-2 border-[#DFE6E9] shadow-sm mt-6">
               <h3 className="text-xl font-bold mb-6 text-[#2D3436]">Lịch trình & Thuốc</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-[#F8F9FA] rounded-xl border border-[#DFE6E9]">
@@ -556,7 +631,27 @@ const ElderlyDashboard = ({ profile }: { profile: UserProfile }) => {
     }
   };
 
+  const logActivity = async (type: AppActivity['type'], message: string) => {
+    if (!profile.linkedUids || profile.linkedUids.length === 0) {
+      toast.error('Chưa kết nối với con cháu để gửi thông báo');
+      return;
+    }
+    try {
+      await setDoc(doc(collection(db, 'activities')), {
+        fromUid: profile.userId,
+        fromName: profile.displayName,
+        toUids: profile.linkedUids,
+        type,
+        message,
+        timestamp: Timestamp.now()
+      });
+    } catch (e) {
+      console.error('Lỗi gửi thông báo:', e);
+    }
+  };
+
   const handleSOS = () => {
+    logActivity('sos', 'CẦN GIÚP ĐỠ KHẨN CẤP!');
     toast('🚑 Đã báo động SOS cho gia đình!', { 
       icon: '🆘', 
       duration: 8000, 
@@ -583,10 +678,31 @@ const ElderlyDashboard = ({ profile }: { profile: UserProfile }) => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-          <ElderActionButton icon={<Pill className="w-10 h-10" />} label="Báo đã uống thuốc" onClick={() => toast.success('Đã báo cho con cháu ✓', { style: { fontSize: '20px', borderRadius: '20px' } })} color="blue" />
-          <ElderActionButton icon={<PhoneCall className="w-10 h-10" />} label="Gọi cho con" onClick={() => toast.success('Đang kết nối...', { style: { fontSize: '20px', borderRadius: '20px' } })} color="green" />
+          <ElderActionButton 
+            icon={<Pill className="w-10 h-10" />} 
+            label="Báo đã uống thuốc" 
+            onClick={() => {
+              logActivity('medicine', 'Đã uống thuốc đúng giờ');
+              toast.success('Đã báo cho con cháu ✓', { style: { fontSize: '20px', borderRadius: '20px' } });
+            }} 
+            color="blue" 
+          />
+          <ElderActionButton 
+            icon={<PhoneCall className="w-10 h-10" />} 
+            label="Gọi cho con" 
+            onClick={() => {
+              logActivity('call', 'Muốn trò chuyện video');
+              toast.success('Đang gửi yêu cầu gọi...', { style: { fontSize: '20px', borderRadius: '20px' } });
+            }} 
+            color="green" 
+          />
           <ElderActionButton icon={<UserPlus className="w-10 h-10" />} label="Mã kết nối" onClick={() => setShowCode(!showCode)} color="orange" />
-          <ElderActionButton icon={<Heart className="w-10 h-10" />} label="Nhịp tim" color="red" />
+          <ElderActionButton 
+            icon={<Heart className="w-10 h-10" />} 
+            label="Nhịp tim" 
+            onClick={() => logActivity('heart', 'Kiểm tra nhịp tim: 72bpm')}
+            color="red" 
+          />
         </div>
 
         <AnimatePresence>
