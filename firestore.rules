@@ -41,9 +41,18 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if false; // Prevention of user enumeration
       allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming());
-      allow update: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming()) && (
-        // Action: Update profile, roles or linkings
-        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'role', 'linkedUids', 'inviteCode', 'updatedAt'])
+      allow update: if isSignedIn() && (
+        (request.auth.uid == userId && isValidUser(incoming()) && (
+          // Action: Update profile, roles or linkings
+          incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'role', 'linkedUids', 'inviteCode', 'updatedAt'])
+        )) ||
+        (
+          // Action: Allow child to link to elderly via verified code
+          incoming().diff(existing()).affectedKeys().hasOnly(['linkedUids', '_lastLinkCode']) &&
+          request.auth.uid in incoming().linkedUids &&
+          exists(/databases/$(database)/documents/linkCodes/$(incoming()._lastLinkCode)) &&
+          get(/databases/$(database)/documents/linkCodes/$(incoming()._lastLinkCode)).data.elderUid == userId
+        )
       );
       
       // --- Subcollections ---

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { auth, db, googleProvider } from './lib/firebase';
+import { auth, db, googleProvider, handleFirestoreError, OperationType } from './lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, signInWithPopup } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot, arrayUnion, Timestamp, getDocFromServer, collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
@@ -405,6 +405,8 @@ const FamilyDashboard = ({ profile }: { profile: UserProfile }) => {
           }
         }
       });
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'activities');
     });
 
     return () => unsubscribe();
@@ -445,13 +447,14 @@ const FamilyDashboard = ({ profile }: { profile: UserProfile }) => {
       }, { merge: true });
       
       await setDoc(doc(db, 'users', elderUid), {
-        linkedUids: arrayUnion(profile.userId)
+        linkedUids: arrayUnion(profile.userId),
+        _lastLinkCode: inviteCode.toUpperCase()
       }, { merge: true });
 
       toast.success('Kết nối thành công!');
       setInviteCode('');
     } catch (error) {
-      toast.error('Lỗi khi kết nối');
+      handleFirestoreError(error, OperationType.UPDATE, `users/${profile.userId}`);
     } finally {
       setIsLinking(false);
     }
@@ -627,7 +630,7 @@ const ElderlyDashboard = ({ profile }: { profile: UserProfile }) => {
       setInviteCode(code);
       toast.success('Mã mới đã sẵn sàng');
     } catch (e) {
-      toast.error('Lỗi khi tạo mã');
+      handleFirestoreError(e, OperationType.WRITE, 'linkCodes');
     }
   };
 
@@ -646,7 +649,7 @@ const ElderlyDashboard = ({ profile }: { profile: UserProfile }) => {
         timestamp: Timestamp.now()
       });
     } catch (e) {
-      console.error('Lỗi gửi thông báo:', e);
+      handleFirestoreError(e, OperationType.CREATE, 'activities');
     }
   };
 
