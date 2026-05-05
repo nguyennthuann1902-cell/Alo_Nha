@@ -212,28 +212,30 @@ const Auth = ({ onAuthSuccess }: { onAuthSuccess: () => void }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#F5F2ED] font-sans text-[#1A1A1A]">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[#F8F9FA] font-sans text-[#2D3436]">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white p-12 rounded-sm shadow-sm border border-[#D1CEC8]"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-md bg-white p-10 rounded-2xl shadow-xl border border-[#DFE6E9]"
       >
-        <div className="text-center mb-8">
-          <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C8881] mb-2 block">CARE NETWORK SYNC</span>
-          <h1 className="text-5xl font-serif italic font-medium mb-2">Alo <span className="text-[#1A1A1A] not-italic">Nhà</span></h1>
-          <p className="text-xs text-[#8C8881] uppercase tracking-widest mt-4">Editorial System v1.0</p>
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-[#FFCA28] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <Home className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-4xl font-display font-bold mb-2">Alo Nhà</h1>
+          <p className="text-[#636E72] font-medium text-lg italic">"Kết nối yêu thương"</p>
         </div>
 
-        <div className="flex border-b border-[#D1CEC8] mb-8">
+        <div className="flex gap-2 mb-8 bg-[#F1F2F6] p-1.5 rounded-xl">
           <button 
             onClick={() => setIsLogin(true)}
-            className={cn("flex-1 py-3 text-[10px] uppercase tracking-widest font-bold transition-all border-b-2", isLogin ? "border-[#1A1A1A] text-[#1A1A1A]" : "border-transparent text-[#8C8881]")}
+            className={cn("flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all", isLogin ? "bg-white text-[#2D3436] shadow-md" : "text-[#636E72]")}
           >
             Đăng nhập
           </button>
           <button 
             onClick={() => setIsLogin(false)}
-            className={cn("flex-1 py-3 text-[10px] uppercase tracking-widest font-bold transition-all border-b-2", !isLogin ? "border-[#1A1A1A] text-[#1A1A1A]" : "border-transparent text-[#8C8881]")}
+            className={cn("flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all", !isLogin ? "bg-white text-[#2D3436] shadow-md" : "text-[#636E72]")}
           >
             Đăng ký
           </button>
@@ -242,54 +244,47 @@ const Auth = ({ onAuthSuccess }: { onAuthSuccess: () => void }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {!isLogin && (
             <div>
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-[#8C8881] mb-2">Tên của bạn</label>
+              <label className="block text-sm font-bold text-[#2D3436] mb-2 uppercase tracking-wide">Tên của bạn</label>
               <input 
                 value={name} onChange={e => setName(e.target.value)}
-                className="w-full p-3 bg-[#F5F2ED]/50 border border-[#D1CEC8] rounded-sm focus:outline-none focus:border-[#1A1A1A] text-sm"
+                className="w-full p-4 bg-[#F8F9FA] border-2 border-[#DFE6E9] rounded-xl focus:outline-none focus:border-[#FFCA28] text-lg font-medium transition-colors"
                 placeholder="VD: Chị Mai" required
               />
             </div>
           )}
           <div>
-            <label className="block text-[10px] uppercase tracking-widest font-bold text-[#8C8881] mb-2">Email Address</label>
+            <label className="block text-sm font-bold text-[#2D3436] mb-2 uppercase tracking-wide">Email</label>
             <input 
               type="email" value={email} onChange={e => setEmail(e.target.value)}
-              className="w-full p-3 bg-[#F5F2ED]/50 border border-[#D1CEC8] rounded-sm focus:outline-none focus:border-[#1A1A1A] text-sm"
-              placeholder="name@provider.com" required
+              className="w-full p-4 bg-[#F8F9FA] border-2 border-[#DFE6E9] rounded-xl focus:outline-none focus:border-[#FFCA28] text-lg font-medium transition-colors"
+              placeholder="ten@ví-dụ.com" required
             />
           </div>
           <div>
-            <label className="block text-[10px] uppercase tracking-widest font-bold text-[#8C8881] mb-2">Security Key</label>
+            <label className="block text-sm font-bold text-[#2D3436] mb-2 uppercase tracking-wide">Mật khẩu</label>
             <input 
               type="password" value={password} onChange={e => setPassword(e.target.value)}
-              className="w-full p-3 bg-[#F5F2ED]/50 border border-[#D1CEC8] rounded-sm focus:outline-none focus:border-[#1A1A1A] text-sm"
+              className="w-full p-4 bg-[#F8F9FA] border-2 border-[#DFE6E9] rounded-xl focus:outline-none focus:border-[#FFCA28] text-lg font-medium transition-colors"
               placeholder="••••••••" required
             />
           </div>
+          
           <button 
             disabled={loading}
-            className="w-full py-4 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.3em] font-bold shadow-lg hover:bg-black active:scale-[0.98] transition-all disabled:opacity-50"
+            className="w-full py-5 bg-[#2D3436] text-white rounded-xl font-bold text-lg shadow-lg hover:bg-black active:scale-[0.98] transition-all disabled:opacity-50"
           >
-            {loading ? 'Processing...' : (isLogin ? 'Enter Console' : 'Initialize Account')}
+            {loading ? 'Đang xử lý...' : (isLogin ? 'Đăng nhập' : 'Tạo tài khoản')}
           </button>
         </form>
 
-        <div className="mt-8 pt-8 border-t border-[#D1CEC8]">
-          <div className="text-center mb-6">
-            <span className="text-[9px] uppercase tracking-widest text-[#8C8881]">Hoặc tiếp tục với</span>
-          </div>
+        <div className="mt-8 pt-8 border-t border-[#DFE6E9]">
           <button 
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full py-4 border border-[#D1CEC8] bg-white text-[#1A1A1A] text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-[#F5F2ED] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+            className="w-full py-4 border-2 border-[#DFE6E9] bg-white text-[#2D3436] font-bold rounded-xl hover:bg-[#F8F9FA] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
           >
-            <svg className="w-4 h-4 ml-[-8px]" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="currentColor" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z" />
-              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-            </svg>
-            Google
+            <img src="https://www.gstatic.com/firebase/anonymous-scan/google.svg" alt="Google" className="w-6 h-6" />
+            Đăng nhập với Google
           </button>
         </div>
       </motion.div>
@@ -299,74 +294,70 @@ const Auth = ({ onAuthSuccess }: { onAuthSuccess: () => void }) => {
 
 const RoleSelection = ({ onSelect }: { onSelect: (role: AppRole) => void }) => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-12 bg-[#F5F2ED] font-sans text-[#1A1A1A]">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center mb-16">
-        <span className="text-[10px] uppercase tracking-[0.4em] text-[#8C8881] mb-4 block">Identity Configuration</span>
-        <h1 className="text-7xl font-serif italic font-medium mb-4">Alo Nhà</h1>
-        <p className="text-lg text-[#5E5B54] font-serif italic">\"Chạm là thấy, gọi là nghe\"</p>
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#F1F2F6] font-sans text-[#2D3436]">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
+        <h1 className="text-6xl font-display font-bold text-[#2D3436] mb-4">Alo Nhà</h1>
+        <p className="text-2xl text-[#636E72] font-medium italic">"Chạm là thấy, gọi là nghe"</p>
       </motion.div>
 
-      <div className="grid md:grid-cols-2 gap-12 w-full max-w-5xl">
+      <div className="grid md:grid-cols-2 gap-8 w-full max-w-4xl">
         <RoleCard 
-          icon={<Users className="w-8 h-8" />}
+          icon={<Users className="w-12 h-12" />}
           title="Con cháu"
-          desc="Editorial care management, real-time vital monitoring, and medication scheduling."
+          desc="Theo dõi sức khỏe, lịch uống thuốc và chăm sóc người thân"
           onClick={() => onSelect('family')}
+          color="blue"
         />
         <RoleCard 
-          icon={<User className="w-8 h-8" />}
+          icon={<User className="w-12 h-12" />}
           title="Ông bà"
-          desc="Accessible interface with high-contrast interactions and emergency signaling."
+          desc="Giao diện lớn, nút bấm to, báo uống thuốc và gọi khẩn cấp"
           onClick={() => onSelect('elderly')}
+          color="orange"
         />
       </div>
     </div>
   );
 };
 
-const RoleCard = ({ icon, title, desc, onClick }: any) => (
+const RoleCard = ({ icon, title, desc, onClick, color }: any) => (
   <motion.button 
-    whileHover={{ y: -4 }}
+    whileHover={{ y: -10, scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className="bg-white p-12 rounded-sm text-left border border-[#D1CEC8] shadow-sm hover:shadow-md transition-all flex flex-col h-full relative overflow-hidden group"
+    className="bg-white p-10 rounded-[40px] text-center shadow-2xl border-4 border-transparent hover:border-[#FFCA28] transition-all flex flex-col items-center h-full group"
   >
-    <div className="border-b border-[#D1CEC8] pb-8 mb-8 flex justify-between items-start w-full">
-      <div className="p-4 bg-[#F5F2ED] text-[#1A1A1A] rounded-sm group-hover:bg-[#FFCA28] group-hover:text-white transition-colors">
-        {icon}
-      </div>
-      <ChevronRight className="w-6 h-6 text-[#D1CEC8] group-hover:text-[#1A1A1A] transition-colors" />
+    <div className={cn("w-24 h-24 rounded-3xl flex items-center justify-center mb-8 shadow-sm transition-transform group-hover:scale-110", color === 'blue' ? "bg-blue-100 text-blue-600" : "bg-orange-100 text-orange-600")}>
+      {icon}
     </div>
-    <h3 className="text-4xl font-serif italic mb-4">{title}</h3>
-    <p className="text-sm text-[#8C8881] leading-relaxed mb-12 font-sans">{desc}</p>
-    <div className="mt-auto text-[10px] uppercase tracking-[0.2em] font-bold text-[#1A1A1A]">
-      Establish Connection
+    <h3 className="text-4xl font-display font-bold text-[#2D3436] mb-4">{title}</h3>
+    <p className="text-lg text-[#636E72] leading-relaxed mb-10 font-medium">{desc}</p>
+    <div className="mt-auto bg-[#2D3436] text-white py-4 px-8 rounded-2xl font-bold text-lg shadow-md group-hover:bg-black">
+      Bắt đầu ngay
     </div>
   </motion.button>
 );
 
 const Navbar = ({ profile, onLogout }: { profile: UserProfile, onLogout: () => void }) => (
-  <header className="fixed top-0 left-0 right-0 h-24 bg-[#F5F2ED] border-b border-[#D1CEC8] px-12 flex justify-between items-end pb-6 z-50">
-    <div className="flex flex-col">
-      <span className="text-[10px] uppercase tracking-widest text-[#8C8881] mb-1">Family Safety Network</span>
-      <h1 className="text-3xl font-serif italic font-medium leading-none">EverCare Node</h1>
+  <header className="fixed top-0 left-0 right-0 h-20 bg-white border-b-2 border-[#DFE6E9] px-6 md:px-12 flex justify-between items-center z-50">
+    <div className="flex items-center gap-4">
+      <div className="w-10 h-10 bg-[#FFCA28] rounded-xl flex items-center justify-center shadow-sm">
+        <Home className="w-6 h-6 text-white" />
+      </div>
+      <h1 className="text-2xl font-display font-bold text-[#2D3436]">Alo Nhà</h1>
     </div>
-    <div className="flex items-center gap-8">
-      <div className="flex flex-col items-end">
-        <span className="text-xs font-semibold capitalize">{profile.displayName} — {profile.role === 'family' ? 'Monitor' : 'Node'}</span>
-        <span className="text-[10px] text-[#8C8881] uppercase tracking-tighter">Auth Sync: Active</span>
+    <div className="flex items-center gap-4 md:gap-8">
+      <div className="hidden md:flex flex-col items-end">
+        <span className="text-sm font-bold text-[#2D3436]">{profile.displayName}</span>
+        <span className="text-[10px] text-[#636E72] font-bold uppercase tracking-wider">{profile.role === 'family' ? 'Người thân' : 'Ông bà'}</span>
       </div>
-      <div className="flex items-center gap-2">
-        <div className="w-10 h-10 bg-[#FFCA28] rounded-full flex items-center justify-center shadow-sm text-white font-serif italic text-xl">
-          {profile.displayName.charAt(0)}
-        </div>
-        <button 
-          onClick={onLogout}
-          className="p-2 text-[#8C8881] hover:text-[#1A1A1A] transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
-      </div>
+      <button 
+        onClick={onLogout}
+        className="p-3 bg-[#F1F2F6] text-[#636E72] hover:text-red-500 rounded-xl transition-all"
+        title="Đăng xuất"
+      >
+        <LogOut className="w-5 h-5" />
+      </button>
     </div>
   </header>
 );
@@ -403,7 +394,7 @@ const FamilyDashboard = ({ profile }: { profile: UserProfile }) => {
       }
       const elderUid = codeSnap.data().elderUid;
       if (elderUid === profile.userId) {
-        toast.error('Không thể tự kết nối với chính mình!');
+        toast.error('Không thể tự kết nối!');
         return;
       }
       
@@ -415,132 +406,120 @@ const FamilyDashboard = ({ profile }: { profile: UserProfile }) => {
         linkedUids: arrayUnion(profile.userId)
       }, { merge: true });
 
-      toast.success('Đã kết nối thành công!');
+      toast.success('Kết nối thành công!');
       setInviteCode('');
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi kết nối');
+      toast.error('Lỗi khi kết nối');
     } finally {
       setIsLinking(false);
     }
   };
 
   return (
-    <main className="pt-24 min-h-screen bg-[#F5F2ED] grid grid-cols-12 gap-0 font-sans text-[#1A1A1A]">
-      <section className="col-span-4 border-r border-[#D1CEC8] p-12 bg-white/40 overflow-y-auto">
-        <div className="mb-16">
-          <h2 className="text-[10px] uppercase tracking-widest text-[#8C8881] mb-8 font-bold">Account Connections</h2>
-          <div className="space-y-6">
+    <main className="pt-20 min-h-screen bg-[#F8F9FA] flex flex-col lg:flex-row font-sans text-[#2D3436]">
+      {/* Sidebar: Connections - Moved to bottom on mobile, side on desktop */}
+      <aside className="w-full lg:w-96 bg-white border-b-2 lg:border-b-0 lg:border-r-2 border-[#DFE6E9] p-6 md:p-8 order-2 lg:order-1">
+        <div className="mb-12">
+          <h2 className="text-xs font-black uppercase tracking-widest text-[#636E72] mb-6">Đang quan tâm</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
             {linkedElders.map(elder => (
-              <div key={elder.userId} className="p-6 border border-[#D1CEC8] rounded-sm bg-white flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-[#E8E6E1] flex items-center justify-center text-lg">👵</div>
-                  <div>
-                    <p className="text-sm font-bold">{elder.displayName}</p>
-                    <p className="text-[10px] text-[#8C8881] font-mono">ID: {elder.userId.substring(0, 8)}</p>
-                  </div>
+              <div key={elder.userId} className="p-4 bg-[#F8F9FA] rounded-2xl border border-[#DFE6E9] flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-xl shrink-0">👵</div>
+                <div className="min-w-0">
+                  <p className="font-bold text-[#2D3436] truncate">{elder.displayName}</p>
+                  <p className="text-[10px] font-mono text-[#636E72] uppercase truncate">ID: {elder.userId.substring(0, 8)}</p>
                 </div>
-                <span className="px-2 py-1 bg-green-100 text-green-700 text-[8px] font-black uppercase rounded-[2px] tracking-tighter">Linked</span>
               </div>
             ))}
-            
-            <div className="pt-4">
-              <h3 className="text-[10px] uppercase font-bold text-[#8C8881] mb-4">Establish New Tunnel</h3>
-              <div className="flex gap-2">
-                <input 
-                  value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())}
-                  placeholder="6-DIGIT CODE"
-                  className="flex-1 p-4 border border-[#D1CEC8] rounded-sm focus:border-[#1A1A1A] focus:outline-none text-xs font-mono uppercase tracking-[0.2em]"
-                  maxLength={6}
-                />
-                <button 
-                  onClick={handleLink} disabled={isLinking}
-                  className="px-6 bg-[#1A1A1A] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors disabled:opacity-50"
-                >
-                  Sync
-                </button>
-              </div>
+          </div>
+          
+          <div className="pt-6 mt-6 border-t border-[#DFE6E9]">
+            <h3 className="text-[10px] font-black uppercase text-[#636E72] mb-4">Thêm người thân mới</h3>
+            <div className="flex gap-2">
+              <input 
+                value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())}
+                placeholder="MÃ 6 SỐ"
+                className="flex-1 p-3 bg-[#F8F9FA] border-2 border-[#DFE6E9] rounded-xl focus:border-[#FFCA28] focus:outline-none text-sm font-mono uppercase tracking-[0.2em]"
+                maxLength={6}
+              />
+              <button 
+                onClick={handleLink} disabled={isLinking}
+                className="px-5 bg-[#2D3436] text-white rounded-xl font-bold hover:bg-black transition-colors disabled:opacity-50 shrink-0"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
             </div>
+            <p className="text-[10px] text-[#636E72] mt-2 italic">Nhập mã an toàn từ máy ông bà</p>
+          </div>
 
-            <div className="pt-8 border-t border-[#D1CEC8]">
-              <FriendManagement profile={profile} />
-            </div>
+          <div className="pt-8 mt-8 border-t border-[#DFE6E9]">
+            <FriendManagement profile={profile} />
           </div>
         </div>
+      </aside>
 
-        <div className="mt-24">
-          <div className="p-8 bg-[#1A1A1A] text-white rounded-sm">
-            <h3 className="text-2xl font-serif italic mb-4">Secure Cloud Sync</h3>
-            <p className="text-xs text-[#8C8881] leading-relaxed mb-6 font-sans">All care data is encrypted via Firebase Firestore and synchronized in real-time across your family devices.</p>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-[10px] font-mono uppercase tracking-tighter">Status: Active Tunnel</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="col-span-8 p-16 flex flex-col justify-between overflow-y-auto">
-        <div>
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#8C8881]">Currently Monitoring</span>
-              <h2 className="text-8xl font-serif mt-4 mb-6 leading-tight">
-                {linkedElders.length > 0 ? linkedElders[0].displayName : 'No Node Active'}
+      {/* Main Content: Stats */}
+      <section className="flex-1 p-6 md:p-12 overflow-y-auto order-1 lg:order-2">
+        {linkedElders.length > 0 ? (
+          <div className="max-w-4xl mx-auto">
+            <header className="mb-10 text-center lg:text-left">
+              <span className="text-sm font-black uppercase tracking-widest text-orange-500">Đang theo dõi</span>
+              <h2 className="text-4xl md:text-6xl font-display font-bold text-[#2D3436] mt-4 mb-4">
+                {linkedElders[0].displayName}
               </h2>
-              <p className="text-xl text-[#5E5B54] font-serif leading-relaxed max-w-xl italic">
-                {linkedElders.length > 0 
-                  ? 'Vital signs show consistent stabilization within normal parameters. Real-time synchronization active.'
-                  : 'Please connect to a family member\'s node using a security invite code to begin monitoring.'}
-              </p>
+              <div className="flex items-center justify-center lg:justify-start gap-2 text-[#636E72] font-medium">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span>Hoạt động: Vừa xong</span>
+              </div>
+            </header>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-12">
+              <StatCard2 icon={<Heart className="w-6 h-6 text-red-500" />} label="Nhịp tim" value="72" unit="bpm" color="red" />
+              <StatCard2 icon={<Activity className="w-6 h-6 text-blue-500" />} label="Oxy máu" value="98" unit="%" color="blue" />
+              <StatCard2 icon={<Activity className="w-6 h-6 text-green-500" />} label="Giấc ngủ" value="Sâu" unit="" color="green" />
             </div>
-            <div className="w-40 h-40 border border-[#D1CEC8] p-2 rotate-3 bg-white shadow-xl flex-shrink-0 ml-12">
-              <div className="w-full h-full bg-[#E8E6E1] flex items-center justify-center text-4xl grayscale">
-                {linkedElders.length > 0 ? '👵' : '☁️'}
+
+            <div className="bg-white p-8 rounded-3xl border-2 border-[#DFE6E9] shadow-sm">
+              <h3 className="text-xl font-bold mb-6 text-[#2D3436]">Lịch trình & Thuốc</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-[#F8F9FA] rounded-xl border border-[#DFE6E9]">
+                  <div className="flex items-center gap-4">
+                    <Pill className="text-orange-500" />
+                    <div>
+                      <p className="font-bold">Vitamin D3</p>
+                      <p className="text-xs text-[#636E72]">Hẹn: 10:30 AM</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-orange-600 bg-orange-100 px-3 py-1 rounded-full">Sắp tới</span>
+                </div>
               </div>
             </div>
           </div>
-
-          <div className="grid grid-cols-3 gap-12 mt-20">
-            <div className="border-t-2 border-[#1A1A1A] pt-6 group">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#8C8881] group-hover:text-[#1A1A1A] transition-colors">Heart Rate</span>
-              <p className="text-6xl font-serif mt-4 tabular-nums">72 <span className="text-sm italic text-[#8C8881]">bpm</span></p>
-            </div>
-            <div className="border-t border-[#D1CEC8] pt-6">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#8C8881]">Blood Oxygen</span>
-              <p className="text-6xl font-serif mt-4 text-[#8C8881] tabular-nums">98 <span className="text-sm italic">%</span></p>
-            </div>
-            <div className="border-t-2 border-[#1A1A1A] pt-6">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#8C8881]">Sleep Cycle</span>
-              <p className="text-6xl font-serif mt-4 leading-none">Deep</p>
-            </div>
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto">
+            <div className="w-24 h-24 bg-white rounded-3xl border-2 border-dashed border-[#DFE6E9] flex items-center justify-center mb-8 text-4xl grayscale">☁️</div>
+            <h2 className="text-3xl font-display font-bold text-[#2D3436] mb-4">Chưa có kết nối nào</h2>
+            <p className="text-[#636E72] text-lg leading-relaxed">Vui lòng nhập mã an toàn từ máy của người thân để bắt đầu theo dõi sức khỏe.</p>
           </div>
-        </div>
-
-        <div className="mt-20 border-t border-[#D1CEC8] pt-12 flex items-center justify-between">
-          <div className="flex gap-16">
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase text-[#8C8881] font-bold tracking-widest mb-1">Next Medication</span>
-              <span className="text-md font-serif italic text-[#1A1A1A]">10:30 AM — Vitamin D3</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase text-[#8C8881] font-bold tracking-widest mb-1">Alert Threshold</span>
-              <span className="text-md font-serif italic text-[#1A1A1A]">High ({'>'}110 bpm)</span>
-            </div>
-          </div>
-          <button className="px-10 py-4 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-black transition-all">
-            View Full Logs
-          </button>
-        </div>
+        )}
       </section>
-
-      <footer className="col-span-12 h-16 border-t border-[#D1CEC8] bg-white px-12 flex items-center justify-between text-[#8C8881] text-[9px] uppercase tracking-[0.4em] font-bold">
-        <span>Cloud Protocol: Firebase v10</span>
-        <span>Secure Data Channel AES-256</span>
-        <span>© 2026 Alo Nhà Editorial</span>
-      </footer>
     </main>
   );
 };
+
+const StatCard2 = ({ icon, label, value, unit, color }: any) => (
+  <div className="bg-white p-6 rounded-[32px] border-2 border-[#DFE6E9] shadow-sm hover:shadow-md transition-shadow">
+    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-6", 
+      color === 'red' ? 'bg-red-50' : color === 'blue' ? 'bg-blue-50' : 'bg-green-50')}>
+      {icon}
+    </div>
+    <div className="flex items-baseline gap-1">
+      <span className="text-5xl font-display font-bold text-[#2D3436]">{value}</span>
+      <span className="text-lg font-medium text-[#636E72] italic">{unit}</span>
+    </div>
+    <div className="text-xs font-black uppercase tracking-widest text-[#636E72] mt-4">{label}</div>
+  </div>
+);
 
 const StatCard = ({ icon, label, value, unit, status }: any) => (
   <div className="bg-white p-6 border border-[#D1CEC8] rounded-sm shadow-sm hover:shadow-md transition-shadow">
@@ -559,7 +538,7 @@ const ElderlyDashboard = ({ profile }: { profile: UserProfile }) => {
   const [showCode, setShowCode] = useState(false);
 
   const generateCode = async () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const chars = '0123456789';
     let code = '';
     for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
     
@@ -571,59 +550,43 @@ const ElderlyDashboard = ({ profile }: { profile: UserProfile }) => {
       });
       await setDoc(doc(db, 'users', profile.userId), { inviteCode: code }, { merge: true });
       setInviteCode(code);
-      toast.success('Đã tạo mã kết nối mới!');
+      toast.success('Mã mới đã sẵn sàng');
     } catch (e) {
       toast.error('Lỗi khi tạo mã');
     }
   };
 
   const handleSOS = () => {
-    toast('🚑 Đã gửi tín hiệu SOS khẩn cấp!', { 
-      icon: '🚨', 
-      duration: 5000, 
-      style: { background: '#1A1A1A', color: '#fff', border: '1px solid #D1CEC8', borderRadius: '2px', fontSize: '12px', letterSpacing: '2px' } 
+    toast('🚑 Đã báo động SOS cho gia đình!', { 
+      icon: '🆘', 
+      duration: 8000, 
+      style: { background: '#D63031', color: '#fff', borderRadius: '24px', fontSize: '24px', fontWeight: 'bold' } 
     });
   };
 
   return (
-    <main className="pt-24 min-h-screen bg-[#F5F2ED] p-12 font-sans text-[#1A1A1A]">
-      <div className="max-w-6xl mx-auto space-y-12">
-        <div className="flex justify-between items-end border-b border-[#D1CEC8] pb-12">
-          <div>
-            <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-[#8C8881]">User Status: Active</span>
-            <h2 className="text-7xl font-serif italic mt-4">Chào {profile.displayName}!</h2>
+    <main className="pt-20 min-h-screen bg-[#F1F2F6] p-4 md:p-8 font-sans text-[#2D3436]">
+      <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
+        <div className="bg-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] shadow-sm border-2 border-[#DFE6E9] flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="text-center md:text-left">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-balance">Chào {profile.displayName}!</h2>
+            <p className="text-lg md:text-xl text-[#636E72] font-medium mt-2">Hôm nay ông bà thấy thế nào?</p>
           </div>
-          <p className="text-xl text-[#5E5B54] font-serif italic max-w-sm text-right">
-            Hệ thống đang hoạt động ổn định. Mọi thông tin đều được bảo mật.
-          </p>
+          <motion.button 
+            whileTap={{ scale: 0.9 }}
+            onClick={handleSOS}
+            className="w-40 h-40 md:w-48 md:h-48 rounded-full bg-red-600 border-8 border-red-200 shadow-2xl flex flex-col items-center justify-center text-white active:bg-red-800 transition-all shrink-0"
+          >
+            <span className="text-3xl md:text-4xl font-black">CỨU HỘ</span>
+            <span className="text-lg md:text-xl font-bold">S.O.S</span>
+          </motion.button>
         </div>
 
-        <div className="grid grid-cols-12 gap-12 items-center">
-          <div className="col-span-12 lg:col-span-5 flex flex-col items-center gap-12">
-            <motion.button 
-              whileTap={{ scale: 0.9 }}
-              onClick={handleSOS}
-              className="w-80 h-80 rounded-full bg-[#1A1A1A] border-[16px] border-[#D1CEC8] shadow-2xl flex flex-col items-center justify-center text-white active:bg-black transition-colors"
-            >
-              <span className="text-8xl font-serif italic tracking-tighter">SOS</span>
-              <span className="text-[10px] uppercase font-bold tracking-[0.4em] text-[#8C8881] mt-6">Signal Emergency</span>
-            </motion.button>
-            
-            <p className="text-center text-xs text-[#8C8881] uppercase tracking-[0.2em] max-w-xs leading-relaxed">
-              Nhấn giữ 2 giây để gửi tín hiệu khẩn cấp đến các nút mạng trong gia đình.
-            </p>
-          </div>
-
-          <div className="col-span-12 lg:col-span-7 grid grid-cols-2 gap-8">
-            <ElderActionButton icon={<Pill className="w-8 h-8" />} label="Báo đã uống thuốc" onClick={() => toast.success('Status Updated ✓')} />
-            <ElderActionButton icon={<Phone className="w-8 h-8" />} label="Gọi cho con cháu" onClick={() => toast.success('Connecting...')} />
-            <ElderActionButton icon={<Calendar className="w-8 h-8" />} label="Xem lịch trình" />
-            <ElderActionButton 
-              icon={<UserPlus className="w-8 h-8" />} 
-              label="Mã kết bạn" 
-              onClick={() => setShowCode(!showCode)} 
-            />
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+          <ElderActionButton icon={<Pill className="w-10 h-10" />} label="Báo đã uống thuốc" onClick={() => toast.success('Đã báo cho con cháu ✓', { style: { fontSize: '20px', borderRadius: '20px' } })} color="blue" />
+          <ElderActionButton icon={<PhoneCall className="w-10 h-10" />} label="Gọi cho con" onClick={() => toast.success('Đang kết nối...', { style: { fontSize: '20px', borderRadius: '20px' } })} color="green" />
+          <ElderActionButton icon={<UserPlus className="w-10 h-10" />} label="Mã kết nối" onClick={() => setShowCode(!showCode)} color="orange" />
+          <ElderActionButton icon={<Heart className="w-10 h-10" />} label="Nhịp tim" color="red" />
         </div>
 
         <AnimatePresence>
@@ -632,39 +595,25 @@ const ElderlyDashboard = ({ profile }: { profile: UserProfile }) => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="grid md:grid-cols-2 gap-12"
+              className="bg-white p-8 rounded-[40px] border-4 border-dashed border-[#DFE6E9] text-center"
             >
-              <div className="bg-white border-2 border-dashed border-[#D1CEC8] p-16 rounded-sm text-center">
-                <span className="text-[10px] uppercase tracking-[0.5em] font-bold text-[#8C8881] mb-8 block">Security Access Key</span>
-                {inviteCode ? (
-                  <div className="text-7xl font-serif italic tracking-[0.2em] text-[#1A1A1A] mb-12 tabular-nums">{inviteCode}</div>
-                ) : (
-                  <button 
-                    onClick={generateCode}
-                    className="px-12 py-5 bg-[#1A1A1A] text-white text-xs uppercase tracking-[0.4em] font-bold mb-8 hover:bg-black"
-                  >
-                    Generate New Key
-                  </button>
-                )}
-                <p className="text-[#8C8881] font-serif italic text-sm">Đọc 6 ký tự này cho con cháu để bắt đầu đồng bộ hóa dữ liệu.</p>
-              </div>
-
-              <div className="bg-white border border-[#D1CEC8] p-16 rounded-sm">
-                <FriendManagement profile={profile} />
-              </div>
+              <h3 className="text-2xl font-bold mb-6">Mã an toàn của ông bà</h3>
+              {inviteCode ? (
+                <div className="text-7xl font-mono font-black tracking-widest text-[#2D3436] mb-8 bg-[#F8F9FA] p-6 rounded-2xl">{inviteCode}</div>
+              ) : (
+                <button onClick={generateCode} className="px-10 py-5 bg-[#2D3436] text-white rounded-2xl font-bold text-xl mb-6 shadow-lg">Tạo mã mới</button>
+              )}
+              <p className="text-lg text-[#636E72] font-medium leading-relaxed">Đọc 6 số này cho con cháu để họ theo dõi sức khỏe cho mình.</p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div className="bg-white border border-[#D1CEC8] p-16 rounded-sm">
-          <div className="flex justify-between items-center mb-12 border-b border-[#D1CEC8] pb-8">
-            <h3 className="text-4xl font-serif italic">Lịch trình hôm nay</h3>
-            <span className="text-[10px] uppercase tracking-widest text-[#8C8881] font-bold">Updated: Just Now</span>
-          </div>
-          <div className="grid gap-8">
-            <ElderItem label="Uống thuốc huyết áp" time="07:00" done />
-            <ElderItem label="Uống Vitamin D3" time="12:00" />
-            <ElderItem label="Uống thuốc Tim" time="20:00" />
+        <div className="bg-white p-8 rounded-[40px] border-2 border-[#DFE6E9] shadow-sm">
+          <h3 className="text-3xl font-display font-bold mb-8 text-center underline decoration-[#FFCA28] underline-offset-8">Nhắc nhở hôm nay</h3>
+          <div className="space-y-6">
+            <ElderItem label="Uống thuốc Huyết áp" time="Buổi sáng" done />
+            <ElderItem label="Uống Vitamin D3" time="Buổi trưa" />
+            <ElderItem label="Uống thuốc Tim" time="Buổi tối" />
           </div>
         </div>
       </div>
@@ -672,37 +621,41 @@ const ElderlyDashboard = ({ profile }: { profile: UserProfile }) => {
   );
 };
 
-const ElderActionButton = ({ icon, label, onClick }: any) => (
+const ElderActionButton = ({ icon, label, onClick, color }: any) => (
   <motion.button 
-    whileHover={{ y: -2 }}
+    whileHover={{ y: -5, scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className="p-12 border border-[#D1CEC8] bg-white text-[#1A1A1A] flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-md transition-all group"
+    className="p-6 md:p-8 bg-white border-4 border-transparent hover:border-[#FFCA28] rounded-[32px] md:rounded-[40px] shadow-lg flex flex-col items-center justify-center gap-4 transition-all group"
   >
-    <div className="p-4 bg-[#F5F2ED] group-hover:bg-[#FFCA28] group-hover:text-white transition-colors">
+    <div className={cn("w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-3xl flex items-center justify-center", 
+      color === 'blue' ? 'bg-blue-100 text-blue-600' : 
+      color === 'green' ? 'bg-green-100 text-green-600' : 
+      color === 'orange' ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600')}>
       {icon}
     </div>
-    <span className="text-xs uppercase tracking-[0.25em] font-bold text-center leading-tight">{label}</span>
+    <span className="text-xl md:text-2xl font-bold text-center text-[#2D3436]">{label}</span>
   </motion.button>
 );
 
 const ElderItem = ({ label, time, done }: any) => (
-  <div className={cn("flex items-center justify-between p-8 border border-[#D1CEC8] group transition-all", done ? "bg-[#F5F2ED]/50 opacity-40 grayscale" : "bg-white hover:border-[#1A1A1A]")}>
-    <div className="flex items-center gap-8">
-      <div className={cn("p-4 border", done ? "border-[#D1CEC8]" : "border-[#1A1A1A] bg-[#1A1A1A] text-white")}>
-        {done ? <Check className="w-6 h-6" /> : <Pill className="w-6 h-6" />}
+  <div className={cn("flex flex-col sm:flex-row items-center justify-between p-6 rounded-[32px] border-2 transition-all gap-4", 
+    done ? "bg-[#F8F9FA] border-[#DFE6E9] opacity-60" : "bg-white border-[#DFE6E9] shadow-sm")}>
+    <div className="flex items-center gap-6 w-full sm:w-auto">
+      <div className={cn("w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-2xl flex items-center justify-center", done ? "bg-gray-200 text-gray-500" : "bg-[#2D3436] text-white shadow-lg")}>
+        {done ? <Check className="w-6 h-6 md:w-8 md:h-8" /> : <Pill className="w-6 h-6 md:w-8 md:h-8" />}
       </div>
       <div>
-        <div className="text-2xl font-serif italic mb-1">{label}</div>
-        <div className="text-[10px] uppercase font-bold text-[#8C8881] tracking-[0.3em]">{time}</div>
+        <div className="text-xl md:text-2xl font-bold text-[#2D3436]">{label}</div>
+        <div className="text-md md:text-lg font-medium text-[#636E72]">{time}</div>
       </div>
     </div>
     {!done && (
       <button 
-        onClick={() => toast.success('Completed ✓')} 
-        className="px-10 py-3 border-2 border-[#1A1A1A] text-[#1A1A1A] text-[10px] uppercase tracking-[0.3em] font-black hover:bg-[#1A1A1A] hover:text-white transition-all"
+        onClick={() => toast.success('Tuyệt vời ✓', { style: { fontSize: '24px', borderRadius: '24px' } })} 
+        className="w-full sm:w-auto px-8 py-4 bg-[#FFCA28] text-[#2D3436] rounded-2xl font-black text-xl shadow-md active:scale-95 transition-all"
       >
-        Complete
+        Xong
       </button>
     )}
   </div>
